@@ -15,7 +15,7 @@ router.put("/update/:id", isAuthenticated("Client"), updateProject);
 router.get("/list", isAuthenticated("Client"), listProjects);
 router.delete("/remove/:id", isAuthenticated("Client"), removeProject);
 router.get(
-  "/tags/:tag",
+  "/tag/:tag",
   isAuthenticated("Client", "Freelancer"),
   getProjectsByTag
 );

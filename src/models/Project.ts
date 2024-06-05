@@ -4,14 +4,14 @@ interface IProject extends Document {
   title: string;
   description: string;
   clientId: Schema.Types.ObjectId;
-  tags: Schema.Types.ObjectId[]; // Reference to ProjectTag model
+  tag: Schema.Types.ObjectId;
 }
 
 const projectSchema = new Schema<IProject>({
   title: { type: String, required: true },
   description: { type: String, required: true },
   clientId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  tags: [{ type: Schema.Types.ObjectId, ref: "ProjectTag" }], // Reference to ProjectTag model
+  tag: { type: Schema.Types.ObjectId, ref: "ProjectTag", required: true },
 });
 
 const Project = model<IProject>("Project", projectSchema);

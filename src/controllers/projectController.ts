@@ -11,25 +11,21 @@ declare module "express-serve-static-core" {
 }
 
 export const addProject = async (request: Request, res: Response) => {
-  const { title, description, tags } = request.body;
+  const { title, description, tag } = request.body;
   const clientId = request.user?.id;
 
   try {
-    const tagIds = await Promise.all(
-      tags.map(async (tag: string) => {
-        let projectTag = await ProjectTag.findOne({ name: tag });
-        if (!projectTag) {
-          projectTag = new ProjectTag({ name: tag });
-          await projectTag.save();
-        }
-        return projectTag._id;
-      })
-    );
+    let projectTag = await ProjectTag.findOne({ name: tag });
+
+    if (!projectTag) {
+      projectTag = new ProjectTag({ name: tag });
+      await projectTag.save();
+    }
 
     const newProject = new Project({
       title,
       description,
-      tags: tagIds,
+      tag: projectTag._id,
       clientId,
     });
 
@@ -43,25 +39,24 @@ export const addProject = async (request: Request, res: Response) => {
 
 export const updateProject = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { title, description, tags } = req.body;
+  const { title, description, tag } = req.body;
 
   try {
-    const tagIds = await Promise.all(
-      tags.map(async (tag: string) => {
-        let projectTag = await ProjectTag.findOne({ name: tag });
-        if (!projectTag) {
-          projectTag = new ProjectTag({ name: tag });
-          await projectTag.save();
-        }
-        return projectTag._id;
-      })
-    );
+    const project = await Project.findById(id);
 
-    const updatedProject = await Project.findByIdAndUpdate(
-      id,
-      { title, description, tags: tagIds },
-      { new: true }
-    );
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    const updateObject = {
+      title: title || project.title,
+      description: description || project.description,
+      tag: tag || project.tag,
+    };
+
+    const updatedProject = await Project.findByIdAndUpdate(id, updateObject, {
+      new: true,
+    });
 
     if (!updatedProject) {
       return res.status(404).json({ message: "Project not found" });
@@ -75,7 +70,7 @@ export const updateProject = async (req: Request, res: Response) => {
 
 export const listProjects = async (_req: Request, res: Response) => {
   try {
-    const projects = await Project.find().populate("tags");
+    const projects = await Project.find().populate("tag");
 
     res.status(200).json(projects);
   } catch (err) {
@@ -109,8 +104,8 @@ export const getProjectsByTag = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Tag not found" });
     }
 
-    const projects = await Project.find({ tags: projectTag._id }).populate(
-      "tags"
+    const projects = await Project.find({ tag: projectTag._id }).populate(
+      "tag"
     );
 
     res.status(200).json(projects);
