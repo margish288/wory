@@ -2,9 +2,17 @@ import { Request, Response } from "express";
 import Project from "../models/Project";
 import ProjectTag from "../models/ProjectTag";
 
-export const addProject = async (req: Request, res: Response) => {
-  const { title, description, tags } = req.body;
-  const clientId = req.user?.id || "";
+declare module "express-serve-static-core" {
+  interface Request {
+    user?: {
+      id: string;
+    };
+  }
+}
+
+export const addProject = async (request: Request, res: Response) => {
+  const { title, description, tags } = request.body;
+  const clientId = request.user?.id;
 
   try {
     const tagIds = await Promise.all(
